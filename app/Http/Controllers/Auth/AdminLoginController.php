@@ -19,33 +19,9 @@ class AdminLoginController extends Controller
     /**
      * Memproses login admin.
      */
-    // public function login(Request $request)
-//     {
-//         // Validasi input
-//         $request->validate([
-//             'email' => 'required|email',
-//             'password' => 'required|min:6',
-//         ]);
-
-//         $credentials = $request->only('email', 'password');
-
-//         // Coba login
-//         if (Auth::attempt($credentials)) {
-//             // Regenerasi session
-//             $request->session()->regenerate();
-
-//             // Arahkan ke dashboard setelah login
-//             return redirect()->route('home');
-//  // Ganti sesuai nama route dashboard Anda
-//         }
-
-//         // Jika gagal login
-//         return back()->withErrors([
-//             'email' => 'Email atau password salah.',
-//         ])->withInput();
-public function login(Request $request)
+   public function login(Request $request)
 {
-    // Validasi input
+    // ✅ Validasi input
     $request->validate([
         'email' => 'required|email',
         'password' => 'required|min:6',
@@ -53,31 +29,32 @@ public function login(Request $request)
 
     $credentials = $request->only('email', 'password');
 
-    // Coba login
+    // ✅ Coba login
     if (Auth::attempt($credentials)) {
-        // Regenerasi session
         $request->session()->regenerate();
 
-        // ✅ Tambahkan pengecekan role
         $user = Auth::user();
+
+        // 🚫 Tolak jika role tamu
         if ($user->role === 'tamu') {
             Auth::logout();
-            return redirect()->route('auth.login')->withErrors([
-                'email' => 'Akun tamu tidak memiliki akses login.',
-            ]);
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+            abort(403, 'Akun tamu tidak diperbolehkan login.');
         }
 
-        // Jika bukan tamu → lanjutkan ke dashboard
-        return redirect()->route('home');
+        // ✅ Redirect sesuai role
+      if ($user->role === 'admin' || $user->role === 'user') {
+        return redirect()->route('home'); // Pastikan route ini didefinisikan (sudah ada)
+    }
     }
 
-    // Jika gagal login
+    // ❌ Jika gagal login
     return back()->withErrors([
         'email' => 'Email atau password salah.',
     ])->withInput();
 }
 
-    
 
     /**
      * Logout admin.

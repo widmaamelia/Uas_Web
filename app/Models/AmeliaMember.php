@@ -20,4 +20,8 @@ class AmeliaMember extends Model
     {
         return $this->belongsTo(User::class, 'user_id');
     }
+   
+    // AmeliaMember.php
+
+
 }

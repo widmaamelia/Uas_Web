@@ -25,4 +25,8 @@ class AmeliaBorrowing extends Model
     {
         return $this->belongsTo(AmeliaMember::class, 'member_id');
     }
+    public function borrowings()
+{
+    return $this->hasMany(AmeliaBorrowing::class, 'member_id');
+}
 }

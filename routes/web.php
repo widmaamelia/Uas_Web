@@ -57,6 +57,12 @@ Route::middleware('auth')->group(function () {
     // 🔄 Peminjaman
     Route::resource('borrowings', AmeliaBorrowingController::class)
         ->parameters(['borrowings' => 'ameliaBorrowing']);
+          // Tambahan manual
+    Route::patch('borrowings/{id}/return', [AmeliaBorrowingController::class, 'returnBook'])
+        ->name('borrowings.return');
+
+    Route::patch('borrowings/{id}/verify', [AmeliaBorrowingController::class, 'verify'])
+        ->name('borrowings.verify');
 });
 
 // ===========================
@@ -93,5 +99,3 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/pinjamanku/kembalikan/{id}', [AmeliaBorrowingController::class, 'returnBook'])->name('borrowings.return');
 });
 // Route untuk pengembalian buku
-Route::patch('borrowings/{borrowing}/return', [AmeliaBorrowingController::class, 'returnBook'])->name('borrowings.return');
-Route::patch('/borrowings/{id}/verify', [AmeliaBorrowingController::class, 'verify'])->name('borrowings.verify');

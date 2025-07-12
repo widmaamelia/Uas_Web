@@ -17,7 +17,7 @@ class AmeliaBorrowingController extends Controller
         $user = Auth::user();
 
         if ($user->role === 'admin') {
-            $borrowings = AmeliaBorrowing::with('book', 'member')
+            $borrowings = AmeliaBorrowing::with(['book', 'member.user'])
                 ->orderByDesc('created_at')
                 ->get();
         } else {
@@ -26,7 +26,7 @@ class AmeliaBorrowingController extends Controller
                 return redirect()->route('home')->with('error', 'Data anggota tidak ditemukan.');
             }
 
-            $borrowings = AmeliaBorrowing::with('book', 'member')
+            $borrowings = AmeliaBorrowing::with(['book', 'member.user'])
                 ->where('member_id', $member->id)
                 ->orderByDesc('created_at')
                 ->get();
@@ -131,48 +131,28 @@ class AmeliaBorrowingController extends Controller
         return redirect()->route('borrowings.index')->with('success', 'Data peminjaman berhasil dihapus.');
     }
 
-    public function myBorrowings()
-    {
-        $member = AmeliaMember::where('user_id', Auth::id())->first();
-        if (!$member) {
-            return redirect()->route('home')->with('error', 'Data anggota tidak ditemukan.');
-        }
-
-        $borrowings = AmeliaBorrowing::with('book')
-            ->where('member_id', $member->id)
-            ->orderByDesc('created_at')
-            ->get()
-            ->map(function ($b) {
-                $today = Carbon::today();
-                $due = Carbon::parse($b->returned_at);
-                $b->status = $due->lt($today) ? 'Terlambat' : 'Tepat Waktu';
-                $b->is_returned = $due->lte($today);
-                return $b;
-            });
-
-        return view('user.borrowings', compact('borrowings'));
-    }
-
     public function returnBook($id)
     {
-        $member = AmeliaMember::where('user_id', Auth::id())->first();
-        $borrowing = AmeliaBorrowing::where('id', $id)
-            ->where('member_id', $member->id)
-            ->firstOrFail();
+        $borrowing = AmeliaBorrowing::with('member.user')->findOrFail($id);
+      
 
-        if (Carbon::parse($borrowing->returned_at)->isFuture()) {
-            $borrowing->update([
-                'returned_at' => Carbon::today()
-            ]);
+
+        if ($borrowing->returned_at) {
+            return back()->with('info', 'Buku sudah dikembalikan sebelumnya.');
         }
 
-        return redirect()->back()->with('success', 'Buku berhasil dikembalikan.');
+        $borrowing->returned_at = now();
+        $borrowing->status = 'selesai';
+        $borrowing->save();
+
+        return back()->with('success', 'Buku berhasil dikembalikan.');
     }
 
     public function verify($id)
     {
         $borrowing = AmeliaBorrowing::findOrFail($id);
         $borrowing->update(['status' => 'belum dikembalikan']);
+
         return redirect()->route('borrowings.index')->with('success', 'Peminjaman telah diverifikasi.');
     }
 }

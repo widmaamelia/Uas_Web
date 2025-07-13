@@ -2,6 +2,7 @@
 
 @section('content')
 <div class="container py-4">
+
     <!-- Header Section -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="fw-bold text-dark">
@@ -16,6 +17,7 @@
     @if ($books->isEmpty())
         <div class="alert alert-warning text-center">Belum ada data buku.</div>
     @else
+
     <!-- Card for Table -->
     <div class="card shadow-sm">
         <div class="card-body p-0">
@@ -23,6 +25,7 @@
                 <table class="table table-striped table-bordered mb-0">
                     <thead class="table-primary text-center">
                         <tr>
+                            <th style="width: 50px;">No</th>
                             <th>Cover</th>
                             <th>Judul</th>
                             <th>Penulis</th>
@@ -34,11 +37,16 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach ($books as $book)
+                        @foreach ($books as $index => $book)
                         <tr class="align-middle text-center">
+                            <td>{{ $books->firstItem() + $index }}</td>
                             <td>
                                 @if ($book->image)
-                                    <img src="{{ asset('storage/' . $book->image) }}" class="rounded shadow-sm" width="60" height="80" style="object-fit: cover;" alt="cover">
+                                    <img src="{{ asset('storage/' . $book->image) }}"
+                                         class="rounded shadow-sm"
+                                         width="60" height="80"
+                                         style="object-fit: cover;"
+                                         alt="cover">
                                 @else
                                     <span class="text-muted">-</span>
                                 @endif
@@ -51,12 +59,16 @@
                                     {{ $book->category->name ?? 'Tanpa Kategori' }}
                                 </span>
                             </td>
-                            <td class="text-start text-muted" style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                            <td class="text-start text-muted"
+                                style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
                                 {{ Str::limit($book->description, 60) }}
                             </td>
                             <td>
                                 @if ($book->pdf_file)
-                                    <a href="{{ asset('storage/' . $book->pdf_file) }}" target="_blank" class="btn btn-sm btn-outline-success" title="Unduh PDF">
+                                    <a href="{{ asset('storage/' . $book->pdf_file) }}"
+                                       target="_blank"
+                                       class="btn btn-sm btn-outline-success"
+                                       title="Unduh PDF">
                                         <i class="bi bi-download"></i>
                                     </a>
                                 @else
@@ -64,10 +76,15 @@
                                 @endif
                             </td>
                             <td>
-                                <a href="{{ route('books.edit', $book->id) }}" class="btn btn-sm btn-outline-primary me-1" title="Edit">
+                                <a href="{{ route('books.edit', $book->id) }}"
+                                   class="btn btn-sm btn-outline-primary me-1"
+                                   title="Edit">
                                     <i class="bi bi-pencil-fill"></i>
                                 </a>
-                                <form action="{{ route('books.destroy', $book->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Yakin ingin menghapus buku ini?')">
+                                <form action="{{ route('books.destroy', $book->id) }}"
+                                      method="POST"
+                                      class="d-inline"
+                                      onsubmit="return confirm('Yakin ingin menghapus buku ini?')">
                                     @csrf
                                     @method('DELETE')
                                     <button class="btn btn-sm btn-outline-danger" title="Hapus">
@@ -82,6 +99,12 @@
             </div>
         </div>
     </div>
+
+    <!-- Pagination Navigation -->
+    <div class="mt-3 d-flex justify-content-center">
+        {{ $books->links('pagination::bootstrap-5') }}
+    </div>
+
     @endif
 </div>
 @endsection

@@ -16,38 +16,47 @@ class AmeliaBorrowingController extends Controller
         $status = $request->query('status');
         $user = Auth::user();
 
-        if ($user->role === 'admin') {
-            $borrowings = AmeliaBorrowing::with(['book', 'member.user'])
-                ->orderByDesc('created_at')
-                ->get();
-        } else {
+        $query = AmeliaBorrowing::with(['book', 'member.user'])->orderByDesc('created_at');
+
+        if ($user->role !== 'admin') {
             $member = AmeliaMember::where('user_id', $user->id)->first();
             if (!$member) {
                 return redirect()->route('home')->with('error', 'Data anggota tidak ditemukan.');
             }
-
-            $borrowings = AmeliaBorrowing::with(['book', 'member.user'])
-                ->where('member_id', $member->id)
-                ->orderByDesc('created_at')
-                ->get();
+            $query->where('member_id', $member->id);
         }
 
+        $allBorrowings = $query->get();
+
         $counts = [
-            'semua' => $borrowings->count(),
-            'belum' => $borrowings->where('status', 'belum dikembalikan')->count(),
-            'tepat' => $borrowings->filter(fn($b) => $b->returned_at && Carbon::parse($b->returned_at)->lte(Carbon::parse($b->borrowed_at)->addDays(7)))->count(),
-            'telat' => $borrowings->filter(fn($b) => $b->returned_at && Carbon::parse($b->returned_at)->gt(Carbon::parse($b->borrowed_at)->addDays(7)))->count(),
+            'semua' => $allBorrowings->count(),
+            'belum' => $allBorrowings->where('status', 'belum dikembalikan')->count(),
+            'tepat' => $allBorrowings->filter(fn($b) =>
+                $b->returned_at && Carbon::parse($b->returned_at)->lte(Carbon::parse($b->borrowed_at)->addDays(7))
+            )->count(),
+            'telat' => $allBorrowings->filter(fn($b) =>
+                $b->returned_at && Carbon::parse($b->returned_at)->gt(Carbon::parse($b->borrowed_at)->addDays(7))
+            )->count(),
         ];
 
-        $filtered = match ($status) {
-            'belum' => $borrowings->where('status', 'belum dikembalikan'),
-            'tepat' => $borrowings->filter(fn($b) => $b->returned_at && Carbon::parse($b->returned_at)->lte(Carbon::parse($b->borrowed_at)->addDays(7))),
-            'telat' => $borrowings->filter(fn($b) => $b->returned_at && Carbon::parse($b->returned_at)->gt(Carbon::parse($b->borrowed_at)->addDays(7))),
-            default => $borrowings,
+        // Apply status filter
+        $query = AmeliaBorrowing::with(['book', 'member.user'])->orderByDesc('created_at');
+        if ($user->role !== 'admin') {
+            $member = AmeliaMember::where('user_id', $user->id)->first();
+            $query->where('member_id', $member->id);
+        }
+
+        match ($status) {
+            'belum' => $query->where('status', 'belum dikembalikan'),
+            'tepat' => $query->whereNotNull('returned_at')->whereRaw('DATE(returned_at) <= DATE_ADD(borrowed_at, INTERVAL 7 DAY)'),
+            'telat' => $query->whereNotNull('returned_at')->whereRaw('DATE(returned_at) > DATE_ADD(borrowed_at, INTERVAL 7 DAY)'),
+            default => null,
         };
 
+        $borrowings = $query->paginate(10)->withQueryString();
+
         return view('borrowings.index', [
-            'borrowings' => $filtered,
+            'borrowings' => $borrowings,
             'counts' => $counts,
             'activeStatus' => $status,
         ]);
@@ -134,8 +143,6 @@ class AmeliaBorrowingController extends Controller
     public function returnBook($id)
     {
         $borrowing = AmeliaBorrowing::with('member.user')->findOrFail($id);
-      
-
 
         if ($borrowing->returned_at) {
             return back()->with('info', 'Buku sudah dikembalikan sebelumnya.');

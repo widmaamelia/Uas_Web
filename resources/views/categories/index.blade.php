@@ -16,14 +16,14 @@
     @if ($categories->isEmpty())
         <div class="alert alert-warning text-center">Belum ada kategori.</div>
     @else
-    <!-- Card for Table -->
+    <!-- Table Card -->
     <div class="card shadow-sm">
         <div class="card-body p-0">
             <div class="table-responsive">
                 <table class="table table-striped table-bordered mb-0">
                     <thead class="table-primary text-center">
                         <tr>
-                            <th>No</th>
+                            <th style="width: 60px;">No</th>
                             <th>Nama Kategori</th>
                             <th style="width: 120px;">Aksi</th>
                         </tr>
@@ -31,12 +31,14 @@
                     <tbody>
                         @foreach ($categories as $index => $category)
                         <tr class="align-middle text-center">
-                            <td>{{ $index + 1 }}</td>
+                            <td>{{ $categories->firstItem() + $index }}</td>
                             <td class="text-start fw-semibold text-dark">{{ $category->name }}</td>
                             <td>
+                                <!-- Tombol Edit -->
                                 <a href="{{ route('categories.edit', $category->id) }}" class="btn btn-sm btn-outline-primary me-1" title="Edit">
                                     <i class="bi bi-pencil-fill"></i>
                                 </a>
+                                <!-- Tombol Hapus -->
                                 <form action="{{ route('categories.destroy', $category->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Yakin ingin menghapus kategori ini?')">
                                     @csrf
                                     @method('DELETE')
@@ -51,6 +53,11 @@
                 </table>
             </div>
         </div>
+    </div>
+
+    <!-- Pagination -->
+    <div class="mt-3 d-flex justify-content-center">
+        {{ $categories->links('pagination::bootstrap-5') }}
     </div>
     @endif
 </div>

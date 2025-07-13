@@ -12,7 +12,7 @@ class AmeliaMemberController extends Controller
      */
     public function index()
     {
-        $members = AmeliaMember::all();
+        $members = AmeliaMember::paginate(10);
         return view('members.index', compact('members'));
     }
 

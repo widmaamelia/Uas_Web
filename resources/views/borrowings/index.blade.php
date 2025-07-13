@@ -8,9 +8,13 @@
         <h2 class="fw-bold text-dark">
             <i class="bi bi-bookmarks-fill text-primary"></i> 📚 Data Peminjaman
         </h2>
-        <a href="{{ route('borrowings.create') }}" class="btn btn-success shadow-sm rounded-pill">
-            <i class="bi bi-plus-lg"></i> Tambah Peminjaman
-        </a>
+        @auth
+            @if (auth()->user()->role === 'admin')
+                <a href="{{ route('borrowings.create') }}" class="btn btn-success shadow-sm rounded-pill">
+                    <i class="bi bi-plus-lg"></i> Tambah Peminjaman
+                </a>
+            @endif
+        @endauth
     </div>
 
     <!-- Filter Status -->
@@ -50,6 +54,7 @@
                     <table class="table table-striped table-bordered mb-0">
                         <thead class="table-primary text-center">
                             <tr>
+                                <th style="width: 50px;">No</th>
                                 <th>Nama Anggota</th>
                                 <th>Judul Buku</th>
                                 <th>Tanggal Pinjam</th>
@@ -61,7 +66,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach ($borrowings as $borrow)
+                            @foreach ($borrowings as $index => $borrow)
                                 @php
                                     $borrowedAt = \Carbon\Carbon::parse($borrow->borrowed_at);
                                     $returnedAt = $borrow->returned_at ? \Carbon\Carbon::parse($borrow->returned_at) : null;
@@ -69,6 +74,7 @@
                                     $today = \Carbon\Carbon::today();
                                 @endphp
                                 <tr>
+                                    <td class="text-center">{{ $borrowings->firstItem() + $index }}</td>
                                     <td>{{ $borrow->member->name ?? '-' }}</td>
                                     <td>{{ $borrow->book->title ?? '-' }}</td>
                                     <td>{{ $borrowedAt->translatedFormat('d F Y') }}</td>
@@ -91,11 +97,9 @@
                                         @endif
                                     </td>
 
-                                    {{-- Kolom Aksi hanya untuk Admin --}}
                                     @if (auth()->user()->role === 'admin')
                                         <td class="text-center">
-
-                                            {{-- ✅ Verifikasi Peminjaman --}}
+                                            {{-- ✅ Verifikasi --}}
                                             @if ($borrow->status === 'diproses')
                                                 <form action="{{ route('borrowings.verify', $borrow->id) }}" method="POST" class="d-inline">
                                                     @csrf
@@ -106,14 +110,13 @@
                                                 </form>
                                             @endif
 
-                                            {{-- ✅ Tandai Dikembalikan --}}
+                                            {{-- ✅ Tandai Kembali --}}
                                             @if (!$borrow->returned_at)
-                                                <form action="{{ route('borrowings.return', $borrow->id) }}" method="POST" class="d-inline"
-                                                      onsubmit="return confirm('Tandai buku ini sudah dikembalikan?')">
+                                                <form action="{{ route('borrowings.return', $borrow->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Tandai buku ini sudah dikembalikan?')">
                                                     @csrf
                                                     @method('PATCH')
                                                     <button class="btn btn-sm btn-success rounded-pill mb-1">
-                                                        <i class="bi bi-check-circle"></i> Tandai Dikembalikan
+                                                        <i class="bi bi-check-circle"></i> Dikembalikan
                                                     </button>
                                                 </form>
                                             @endif
@@ -125,8 +128,7 @@
                                             </a>
 
                                             {{-- 🗑️ Hapus --}}
-                                            <form action="{{ route('borrowings.destroy', $borrow->id) }}" method="POST" class="d-inline"
-                                                  onsubmit="return confirm('Yakin ingin menghapus?')">
+                                            <form action="{{ route('borrowings.destroy', $borrow->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Yakin ingin menghapus?')">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button class="btn btn-sm btn-danger rounded-pill">
@@ -141,6 +143,15 @@
                     </table>
                 </div>
             </div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="mt-3 d-flex justify-content-center">
+            <nav>
+                <ul class="pagination pagination-sm mb-0">
+                    {{ $borrowings->onEachSide(1)->links('pagination::bootstrap-5') }}
+                </ul>
+            </nav>
         </div>
     @endif
 </div>

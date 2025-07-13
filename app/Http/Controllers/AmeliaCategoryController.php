@@ -12,7 +12,7 @@ class AmeliaCategoryController extends Controller
      */
     public function index()
     {
-         $categories = AmeliaCategory::all();
+         $categories = AmeliaCategory::paginate(10);
         return view('categories.index', compact('categories'));
     }
 

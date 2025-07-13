@@ -23,6 +23,7 @@
                 <table class="table table-striped table-bordered mb-0">
                     <thead class="table-primary text-center">
                         <tr>
+                            <th>No</th>
                             <th>NIM</th>
                             <th>Nama</th>
                             <th>Email</th>
@@ -31,8 +32,9 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach ($members as $member)
+                        @foreach ($members as $index => $member)
                         <tr class="align-middle text-center">
+                            <td>{{ $members->firstItem() + $index }}</td>
                             <td>{{ $member->nim }}</td>
                             <td class="text-start fw-semibold text-dark">{{ $member->name }}</td>
                             <td>{{ $member->email }}</td>
@@ -57,5 +59,14 @@
         </div>
     </div>
     @endif
+
+    <!-- Pagination -->
+    <div class="mt-3 d-flex justify-content-center">
+        <nav>
+            <ul class="pagination pagination-sm mb-0">
+                {{ $members->onEachSide(1)->links('pagination::bootstrap-5') }}
+            </ul>
+        </nav>
+    </div>
 </div>
 @endsection

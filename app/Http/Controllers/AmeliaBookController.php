@@ -12,7 +12,7 @@ class AmeliaBookController extends Controller
     // 📚 Halaman Index (Admin)
     public function index()
     {
-        $books = AmeliaBook::with('category')->get();
+        $books = AmeliaBook::with('category')->paginate(10);
         return view('books.index', compact('books'));
     }
 

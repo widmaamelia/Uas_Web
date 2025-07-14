@@ -20,7 +20,6 @@
       transition: all 0.3s ease;
     }
 
-    /* Navbar */
     .navbar {
       background: #fff;
       box-shadow: 0 2px 8px rgba(0,0,0,0.03);
@@ -37,12 +36,10 @@
       color: #2563eb !important;
     }
 
-    /* Search */
     input[type="search"] {
       border-radius: 50px;
     }
 
-    /* Layout */
     .main-container {
       padding: 2rem 0 4rem;
     }
@@ -53,7 +50,6 @@
       box-shadow: 0 10px 20px rgba(0,0,0,0.04);
     }
 
-    /* Card Buku */
     .book-card {
       transition: all 0.3s ease;
       border: none;
@@ -71,7 +67,6 @@
       border-top-right-radius: 1rem;
     }
 
-    /* Swiper */
     .swiper {
       padding-bottom: 1rem;
     }
@@ -79,7 +74,6 @@
       width: 280px;
     }
 
-    /* Footer */
     footer {
       background: #2563eb;
       color: white;
@@ -87,36 +81,14 @@
       padding: 2rem 0;
       margin-top: 3rem;
     }
-
-    /* Dark Mode */
-    .dark-mode {
-      background-color: #111827;
-      color: #f3f4f6;
-    }
-    .dark-mode .navbar,
-    .dark-mode footer {
-      background-color: #1f2937 !important;
-      color: #f3f4f6 !important;
-    }
-    .dark-mode .content-card,
-    .dark-mode .book-card {
-      background-color: #1e293b;
-      color: #f9fafb;
-    }
-    .dark-mode .dropdown-menu {
-      background-color: #1e293b;
-      color: #f9fafb;
-    }
   </style>
 </head>
 <body>
 
-  <!-- Loader -->
   <div id="loader" style="position: fixed; width: 100%; height: 100%; background: #fff; display: flex; justify-content: center; align-items: center; z-index: 9999;">
     <div class="spinner-border text-primary" role="status"></div>
   </div>
 
-  <!-- Navbar -->
   <nav class="navbar navbar-expand-lg sticky-top">
     <div class="container">
       <a class="navbar-brand" href="{{ route('home') }}">
@@ -128,45 +100,43 @@
 
       <div class="collapse navbar-collapse" id="navbarMain">
         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-          @guest
-            <li class="nav-item">
-              <a class="nav-link {{ request()->is('/') ? 'active' : '' }}" href="{{ route('home') }}">
-                <i class="bi bi-house-door me-1"></i> Home
-              </a>
-            </li>
-          @endguest
+          <li class="nav-item">
+            <a class="nav-link {{ request()->is('/') ? 'active' : '' }}" href="{{ route('home') }}">
+              <i class="bi bi-house-door me-1"></i> Home
+            </a>
+          </li>
 
           @auth
-            <li class="nav-item">
-              <a class="nav-link {{ request()->is('/') ? 'active' : '' }}" href="{{ route('home') }}">
-                <i class="bi bi-house-door me-1"></i> Home
-              </a>
-            </li>
-
-            <li class="nav-item dropdown">
-              <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
-                <i class="bi bi-layers me-1"></i> Manajemen
-              </a>
-              <ul class="dropdown-menu">
-                @if (Auth::user()->role === 'admin')
-                  <li><a class="dropdown-item" href="{{ route('books.index') }}">📚 Buku</a></li>
-                  <li><a class="dropdown-item" href="{{ route('categories.index') }}">🏷️ Kategori</a></li>
-                  <li><a class="dropdown-item" href="{{ route('members.index') }}">👥 Anggota</a></li>
-                @endif
-                <li><a class="dropdown-item" href="{{ route('borrowings.index') }}">🔄 Peminjaman</a></li>
-              </ul>
-            </li>
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+              <i class="bi bi-layers me-1"></i> Manajemen
+            </a>
+            <ul class="dropdown-menu">
+              @if (Auth::user()->role === 'admin')
+                <li><a class="dropdown-item" href="{{ route('books.index') }}">📚 Buku</a></li>
+                <li><a class="dropdown-item" href="{{ route('categories.index') }}">🏷️ Kategori</a></li>
+                <li><a class="dropdown-item" href="{{ route('members.index') }}">👥 Anggota</a></li>
+              @endif
+              <li><a class="dropdown-item" href="{{ route('borrowings.index') }}">🔄 Peminjaman</a></li>
+            </ul>
+          </li>
           @endauth
 
+          {{-- Kategori tampil hanya jika bukan admin --}}
           @guest
             <li class="nav-item dropdown">
-              <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+              <a class="nav-link dropdown-toggle {{ request()->has('category') ? 'active' : '' }}" href="#" data-bs-toggle="dropdown">
                 <i class="bi bi-tags me-1"></i> Kategori
               </a>
               <ul class="dropdown-menu">
                 @if(isset($navbarCategories) && count($navbarCategories) > 0)
                   @foreach ($navbarCategories as $category)
-                    <li><a class="dropdown-item" href="{{ route('home', ['category' => $category->id]) }}">{{ $category->name }}</a></li>
+                    <li>
+                      <a class="dropdown-item {{ request('category') == $category->id ? 'active' : '' }}"
+                         href="{{ route('home', ['category' => $category->id]) }}">
+                        {{ $category->name }}
+                      </a>
+                    </li>
                   @endforeach
                 @else
                   <li><span class="dropdown-item text-muted">Tidak ada kategori</span></li>
@@ -174,20 +144,38 @@
               </ul>
             </li>
           @endguest
+
+          @auth
+            @if (Auth::user()->role !== 'admin')
+              <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle {{ request()->has('category') ? 'active' : '' }}" href="#" data-bs-toggle="dropdown">
+                  <i class="bi bi-tags me-1"></i> Kategori
+                </a>
+                <ul class="dropdown-menu">
+                  @if(isset($navbarCategories) && count($navbarCategories) > 0)
+                    @foreach ($navbarCategories as $category)
+                      <li>
+                        <a class="dropdown-item {{ request('category') == $category->id ? 'active' : '' }}"
+                           href="{{ route('home', ['category' => $category->id]) }}">
+                          {{ $category->name }}
+                        </a>
+                      </li>
+                    @endforeach
+                  @else
+                    <li><span class="dropdown-item text-muted">Tidak ada kategori</span></li>
+                  @endif
+                </ul>
+              </li>
+            @endif
+          @endauth
+
         </ul>
 
-        <!-- Search -->
         <form class="d-flex me-2" method="GET" action="{{ route('home') }}">
           <input class="form-control me-2" type="search" name="search" placeholder="Cari buku..." value="{{ request('search') }}">
           <button class="btn btn-outline-primary rounded-pill" type="submit"><i class="bi bi-search"></i></button>
         </form>
 
-        <!-- Theme -->
-        <button class="btn btn-sm btn-outline-secondary me-2" onclick="toggleDarkMode()">
-          <i class="bi bi-moon"></i>
-        </button>
-
-        <!-- Auth -->
         <ul class="navbar-nav">
           @auth
             <li class="nav-item dropdown">
@@ -217,7 +205,6 @@
     </div>
   </nav>
 
-  <!-- Main -->
   <div class="container main-container">
     @if (session('success'))
       <div class="alert alert-success alert-dismissible fade show">
@@ -231,13 +218,11 @@
     </div>
   </div>
 
-  <!-- Footer -->
   <footer>
     <div>Sistem Informasi Perpustakaan Kampus</div>
     <small>© 2025 SIPUSKA • by Amelia</small>
   </footer>
 
-  <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
@@ -246,9 +231,6 @@
     window.addEventListener('load', () => {
       document.getElementById('loader').style.display = 'none';
     });
-    function toggleDarkMode() {
-      document.body.classList.toggle('dark-mode');
-    }
 
     const swiper = new Swiper(".mySwiper", {
       slidesPerView: 1,
